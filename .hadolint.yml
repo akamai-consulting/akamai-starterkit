@@ -1,0 +1,3 @@
+ignored:
+  - DL3008 # Ignores requirement that versions be pinned.
+  - DL4006 # Ignores Set the SHELL option -o pipefail before RUN with a pipe in it.

@@ -1,0 +1,26 @@
+{
+	"name": "Akamai Dev Environment",
+	"dockerFile": "../development.Dockerfile",
+	"runArgs": [
+		"--userns=keep-id:uid=1000,gid=1000"
+	   ],
+	"containerUser": "vscode",
+	"updateRemoteUserUID": true,
+	"containerEnv": {
+		"HOME": "/home/vscode"
+	},
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"HashiCorp.terraform",
+				"ms-kubernetes-tools.vscode-kubernetes-tools",
+				"AkamaiEdgeWorker.akamai-edgeworkers-vscode-extension",
+				"Akamai.papi",
+				"4ops.terraform"
+			]
+		}
+	},
+	"mounts": [
+		"type=bind,source=${localEnv:HOME}/.edgerc,target=/home/vscode/.edgerc"
+	]
+  }

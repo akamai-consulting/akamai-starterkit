@@ -1,0 +1,211 @@
+name: Workflow using custom Docker image
+
+on:
+  push:
+    branches:
+      - main
+      - 'integration*'
+  pull_request:
+  # Types defaults to [opened, synchronize reopened]. 
+  # Closed has to be added explicitly. 
+  # https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - closed
+  delete:
+
+jobs:
+  lint:
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'synchronize'))
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/aweingarten/ew-hello-world:dev-build
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run a command
+        run: tflint
+        working-directory: terraform
+
+  # The deployment/environment URL is evaluated at the start of a job. 
+  # The only way to control it is to set the value in an earlier job and pass that along.
+  # See here: https://docs.github.com/en/actions/using-jobs/defining-outputs-for-jobs
+  deployment_name_builder:
+    runs-on: ubuntu-latest
+    env:
+      BASE_URL: ${{ vars.BASE_URL }}
+     
+    outputs:
+      deployment_name: ${{ steps.set_env_step.outputs.deployment_name }}
+      deployment_url: ${{ steps.set_env_step.outputs.deployment_url }}
+
+    steps:
+      - name: Set environment name
+        id: set_env_step
+        run: | 
+              if [ "${{ github.event_name }}" = "pull_request" ]; then
+                ref_name="PR${{ github.event.pull_request.number }}"
+              else
+                ref_name="${{ github.ref_name }}"
+                ref_name=$(echo "$ref_name" | sed 's/integration-//')
+                case "$ref_name" in
+                  "main")
+                    ref_name="production"
+                    ;;
+                  "override2")
+                    ref_name="newvalue2"
+                    ;;
+                  *)
+                    ;;
+                esac
+              fi
+              
+              echo "deployment_name=$ref_name" >> $GITHUB_OUTPUT
+              echo "deployment_url=$ref_name.$BASE_URL" >> $GITHUB_OUTPUT
+              echo "Final value of ref_name: $ref_name"
+              env
+
+  deployment:
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'synchronize'))
+    runs-on: ubuntu-latest
+    needs:  deployment_name_builder
+    container:
+      image: ghcr.io/aweingarten/ew-hello-world:dev-build
+    env:
+      TF_VAR_group_id: ${{ secrets.GROUP_ID }}
+      TF_VAR_property_id: ${{ secrets.PROPERTY_ID }}
+      TF_VAR_contract_id: ${{ secrets.CONTRACT_ID }}
+      TF_VAR_deployment_name: ${{needs.deployment_name_builder.outputs.deployment_name}}
+      AWS_ACCESS_KEY_ID: ${{ secrets.LINODE_ACCESS_KEY }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.LINODE_SECRET_KEY }}
+      AKAMAI_ACCOUNT_KEY: ${{ secrets.AKAMAI_ACCOUNT_KEY }}
+    environment: 
+      name: ${{needs.deployment_name_builder.outputs.deployment_name}}
+      url: https://${{needs.deployment_name_builder.outputs.deployment_url}}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Write secret to file
+        run: echo "${{ secrets.EDGERC }}" > ~/.edgerc
+
+      - name: 'Terraform Init'
+        run: |
+          if [ "${{ github.ref_name }}" = "${{ github.event.repository.default_branch }}" ]; then
+            workspace_key_prefix="terraform/production/workspace"
+          else
+            workspace_key_prefix="terraform/ci/workspace"
+          fi
+
+          tofu init \
+            -backend-config="bucket=${{ secrets.TF_BACKEND_BUCKET_NAME }}" \
+            -backend-config="workspace_key_prefix=$workspace_key_prefix"
+        working-directory: terraform
+
+      - name: 'Terraform Workspace'
+        run: |
+          if tofu workspace select "$TF_VAR_deployment_name" ; then
+            echo "Workspace already exists"
+          else
+            tofu workspace new "$TF_VAR_deployment_name"
+          fi
+        working-directory: terraform  
+
+      # This is an annoying work around.  Repetitive calls to TF will expect that the bundle/tar exist. Without this tofu apply will fail.       
+      - name: Prepare edge worker bundle
+        run: tar -czvf ../terraform/edge-worker-bundle.tgz *
+        working-directory: edge-worker
+
+      - name: Test the plan
+        run: tofu plan 
+        working-directory: terraform  
+      
+      - name: Deploy Terraform Infrastructure as Code(IaC)
+        run: tofu apply -auto-approve
+        working-directory: terraform
+      # Terraform will complete within about 5 min.  
+      # However, edge domain and SSL certificate deployment take time beyond that 5 min.
+      # This step is designed to give us an accurage indicator of when the environment is ready.
+      - name: Check Akamai Deployment
+        env:
+          AKAMAI_SECTION: default
+        run: |
+          # Loop until the status is "DEPLOYED"
+          while true; do
+            # Run the command and save the output
+            # Note there is a known deprecation warning coming from Akamai CLI:
+            # https://github.com/akamai/cli-property-manager/issues/87
+
+            output=$(akamai property-manager -a $AKAMAI_ACCOUNT_KEY --section default list-property-hostnames -p "$TF_VAR_deployment_name" --file results.json)
+
+            # Parse the output with jq and check the status
+            status=$(jq -r '.[0].certStatus.staging[0].status' results.json)
+
+            if [ "$status" = "DEPLOYED" ]; then
+              echo "The certificate for staging is deployed."
+              break
+            else
+              echo "The certificate for staging is not deployed. Checking again in 60 seconds..."
+              sleep 60
+            fi
+          done
+  cleanup:
+    if: github.event_name == 'delete' || github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    needs: deployment_name_builder
+    container:
+      image: ghcr.io/aweingarten/ew-hello-world:dev-build
+    env:
+      TF_VAR_group_id: ${{ secrets.GROUP_ID }}
+      TF_VAR_property_id: ${{ secrets.PROPERTY_ID }}
+      TF_VAR_contract_id: ${{ secrets.CONTRACT_ID }}
+      TF_VAR_deployment_name: ${{needs.deployment_name_builder.outputs.deployment_name}}
+
+      AWS_ACCESS_KEY_ID: ${{ secrets.LINODE_ACCESS_KEY }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.LINODE_SECRET_KEY }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Write secret to file
+        run: echo "${{ secrets.EDGERC }}" > ~/.edgerc
+
+      - name: 'Terraform Init'
+        run: |
+          if [ "${{ github.ref_name }}" = "${{ github.event.repository.default_branch }}" ]; then
+            workspace_key_prefix="terraform/production/workspace"
+          else
+            workspace_key_prefix="terraform/ci/workspace"
+          fi
+
+          tofu init \
+            -backend-config="bucket=${{ secrets.TF_BACKEND_BUCKET_NAME }}" \
+            -backend-config="workspace_key_prefix=$workspace_key_prefix"
+        working-directory: terraform
+
+      - name: 'Terraform Workspace'
+        run: |
+          if tofu workspace select "$TF_VAR_deployment_name" ; then
+            echo "Workspace already exists"
+          else
+            tofu workspace new "$TF_VAR_deployment_name"
+          fi
+        working-directory: terraform  
+
+      # This is an annoying work around.  Repetitive calls to TF will expect that the bundle/tar exist. Without this tofu apply will fail.       
+      - name: Prepare edge worker bundle
+        run: tar -czvf ../terraform/edge-worker-bundle.tgz *
+        working-directory: edge-worker
+
+      - name: Terraform Destroy
+        run: tofu destroy -auto-approve
+        working-directory: terraform
+    environment: 
+      name: ${{needs.deployment_name_builder.outputs.deployment_name}}
+      url: https://${{needs.deployment_name_builder.outputs.deployment_url}}
