@@ -5,6 +5,8 @@ on:
     branches:
       - main
       - 'integration*'
+    paths-ignore:
+      - "development.Dockerfile"
   pull_request:
   # Types defaults to [opened, synchronize reopened]. 
   # Closed has to be added explicitly. 
@@ -14,6 +16,8 @@ on:
       - synchronize
       - reopened
       - closed
+    paths-ignore:
+      - "development.Dockerfile"
   delete:
 
 jobs:
