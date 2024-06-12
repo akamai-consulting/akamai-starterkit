@@ -5,6 +5,8 @@ on:
     branches:
       - main
       - 'integration*'
+    paths-ignore:
+      - "development.Dockerfile"
   pull_request:
   # Types defaults to [opened, synchronize reopened]. 
   # Closed has to be added explicitly. 
@@ -14,6 +16,8 @@ on:
       - synchronize
       - reopened
       - closed
+    paths-ignore:
+      - "development.Dockerfile"
   delete:
 
 jobs:
@@ -21,7 +25,7 @@ jobs:
     if: github.event_name == 'push' || (github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'synchronize'))
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/aweingarten/ew-hello-world:dev-build
+      image: ghcr.io/akamai-consulting/akamai-starterkit:dev-build
 
     steps:
       - name: Checkout code
@@ -74,7 +78,7 @@ jobs:
     runs-on: ubuntu-latest
     needs:  deployment_name_builder
     container:
-      image: ghcr.io/aweingarten/ew-hello-world:dev-build
+      image: ghcr.io/akamai-consulting/akamai-starterkit:dev-build
     env:
       TF_VAR_group_id: ${{ secrets.GROUP_ID }}
       TF_VAR_property_id: ${{ secrets.PROPERTY_ID }}
@@ -159,7 +163,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: deployment_name_builder
     container:
-      image: ghcr.io/aweingarten/ew-hello-world:dev-build
+      image: ghcr.io/akamai-consulting/akamai-starterkit:dev-build
     env:
       TF_VAR_group_id: ${{ secrets.GROUP_ID }}
       TF_VAR_property_id: ${{ secrets.PROPERTY_ID }}
