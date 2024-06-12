@@ -1,5 +1,9 @@
-name: Docker
+name: Image Builder for Akamai Development and Build Images
+# Description: This workflow will lint and build and deploy a Docker image.  
+# For merges to main it will push the image to the GitHub registry attached to this repo.
+# The image may be used in CI and locally in devcontainer. 
 
+# The workflow is only run when changes are made to the dockerfile.  It will not run for other changes.
 on:
   pull_request:
     branches:
@@ -35,6 +39,7 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    # See here for docs on pushing images to github packages: https://docs.github.com/en/actions/publishing-packages/publishing-docker-images#publishing-images-to-github-packages
     - name: Log in to GitHub Packages
       uses: docker/login-action@v3
       with:

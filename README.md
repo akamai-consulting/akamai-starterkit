@@ -1,124 +1,52 @@
 # What is this?
-This is a demo of modern dev-ops enabled project.  It makes local development a snap by leveraging [DevContainer](https://code.visualstudio.com/docs/devcontainers/containers) and github actions for a CI/CD workflow 
+This is a demo and template for development teams working with Akamai.  This template gives you 3 things:
+1. A fully configured IDE/local development environment via [VSCode DevContainer](https://code.visualstudio.com/docs/devcontainers/containers).  The environment can be extended by any team and provide standardized tools and consistent local development across your team.  
 
-At the highest level it will 
-- create a new EdgeWorker per branch or pull request
-- deploy code to it
-- deploy that to Akamai staging
-- Set up default routing to expose the PR EW
-- Run automated test against that PR EW
+1. Templates to track Akamai configuration and infrastructure as code(IaC) via Terraform.  Yeah no more clicking buttons in a UI.  Every change can be tracked managed and seamlessly moved from environments. 
 
-This example will use terraform, github, github actions to deploy.  
+1. GitHub Actions for supporting a Github pull request based workflow.  The union of Terraform and GitHub actions unlocks complete on-demand Akamai environments.  Developers can test their code in a real environment before submitting it for a code review and merging to a shared environment. Want integration environments to support your preferred workflow?  No problem.  Prefix branch names corresponding to your environments with "integration-*"  
 
-If you don't use GitHub Actions don't worry. The example actions can easily be adapted to most CI/CD systems.
+# Why should I care?
+- Out of the box Akamai supports staging and production environments.  This template gives you the tools to create any code promotion process you want.  Do you want `dev` -> `uat` -> `staging` -> `prod`?  No problem.  
+- Faster developer onboarding.  With a clearly paved path customer and new devs on customer teams can be productive with Akamai sooner. 
+- Mitigate risk of merging code.  In the old days merging code to an integration envrionment for the first time often carried risk that the shared environment could be broken.  This workflow dramatically reduces this risk by `shifting left`.  If something goes horribly wrong it will only impact a single develope not an entire team!
+- Faster development. If you don't need to fear taking down environments anytime you merge code or want to test changes you can be more agressive and move faster!
+- Putting all these pieces together yourself takes time.  
+- You can get your entire team working with identical local environments. As tools are added they can be merged centrally to the repo.  Devs can pull down the updates and rebuild the container locally to get the new changes. 
+- Getting all this out of the way lets you spend more time innovating with Akamai products and delivering business value to your stakeholders.
 
-# Development Environment.  
-This is an integrated local development environment that runs on your computer inside a container. The purpose of this approach is to provide different projects and members on those projects identical development environments: including the tools installed in that container and the VSCode  extensions used by all project developers.
+# Resources to get started:
+- [Getting Started Locally](docs/getting-started.md)
+- [Akamai Prequisites](docs/akamai-prerequisites.md)
+- [Safely Running Terraform Locally](docs/safely-running-terraform-locally.md)
+- [Importing Existing Property](docs/importing-existing-property.md)
 
-It also allows the developer to interact with the identical container being using in CI to more easily debug CI issues.
+# Additional Resources
+- [Terraform Basics](docs/terraform-basics.md): Just a superficial quick start.
+- [Gotchas](docs/gotchas.md): There are things that burned us setting this up and we wanted to document them.
+- [Known Issues](docs/known-issues.md):  We know there are some quirks to iron out. 
+- [Notes Tips and Tricks](docs/notes/notes-tips-and-tricks.md): Few tricks that can come in handy!
 
-# Getting Started Locally Windows:
-1. Install Podman Desktop [https://podman-desktop.io/downloads](https://podman-desktop.io/downloads)
-1. Install VSCode: [https://code.visualstudio.com/download](https://code.visualstudio.com/download)
-1. Open the VSCode project folder in a terminal window using the command `code .`
-1. It will prompt you to install some extensions, just click on "Install" for all of them.
-1. It will prompt you to reopen the project in a devcontainer.  Do so. 
-
-# Getting Started Locally Mac
-All you need to get started for:
-1. Install Brew `https://brew.sh/`
-1. Install VSCode `brew cask install vscode`
-1. Install Podman and Podman desktop  `brew cask install podman-desktop`
-1. Open the VSCode project folder in a terminal window using the command `code .`
-1. It will prompt you to install some extensions, just click on "Install" for all of them.
-1. It will prompt you to reopen the project in a devcontainer.  Do so. 
-
-Thats it. Now VSCode is running inside a container and your local development environment should be identical across all projects that use this approach.  The Terminal inside VS code is attached to the container.  OOTB things like `terraform` `tofu` or `akamai` will just work.  Want to add something else to the mix?  Edit [development.Dockerfile] and rebuild your local devcontainer.
-
-## Terraform Prerequisites
-1. Need an Akamai API key created with the following permissions:
-    1. CPS (@todo Can probably remove this now)
-    1. Diagnostic Tools
-    1. DNS—Zone Record Management 
-    1. Edge Diagnostics 
-    1. Edge Hostnames API (hapi)  (@todo Can probably remove this now)
-    1. EdgeKV
-    1. EdgeWorkers
-    1. Property Manager (PAPI)
-
-    You can go [here](https://control.akamai.com/apps/identity-management/#/tabs/users/list) to make one.  NOTE do NOT select all API's it will cause errors later. Select only the API's you need.  We reccomend making one API key for CI and another for each dev who wishes to run this locally. 
-    https://techdocs.akamai.com/developer/docs/set-up-authentication-credentials
-
-1. Need a Linode bucket created to store terraform state:  See [here](https://www.linode.com/docs/products/storage/object-storage/guides/manage-buckets/):
-1. Need a Linode API key to use for writing the state information from Terraform. See [here](https://www.linode.com/docs/products/storage/object-storage/guides/access-keys/).  Note it will need read/write access.
-1. Need a domain that can be used for deployments. It's DNS should be in edge DNS. 
+# Existential Questions
+Any solution implies new problems :)
 
 
-## Setting up CI-CD
-This worker expects several secrets to be set in order to run:
+## Farewell to managing IaC resources in the UI
+Working with Infrastructure as Code(IaC) stored in version control(VCS) requires a mindshift change.  Akamai was traditionally managed via the web-ui portal. That was the system of record. When you switch from being UI centric to IaC you need to delineate which things are being managed by code and STOP editing them via the web.  The IaC is supposed to be the system of record. If you are making changes to the UI and then backporting them to the IaC you are doing it wrong!  Instead make the change to IaC and let an IaC deployment make the change for you.  
 
-Terraform Keys
-- `GROUP_ID`: The group in akamai where new properties will be created.
-- `CONTRACT_ID`: The contract for Akamai 
-- `EDGERC`: Akamai API key needed by terraform to make changes on the Akamai infrastructue. 
-- `BASE_URL`: The name of the URL under edgedns control.
+You may need to start to limit UI access as you embark on this journey to protect against this situation.
 
-State Bucket Keys:
-- `LINODE_ACCESS_KEY`: Keys for using Linode for storing terraform state. 
-- `LINODE_SECRET_KEY`: Keys for using Linode for storing terraform state.
-- `TF_BACKEND_BUCKET_NAME`: The name of the bucket used for storing TF-state
+## Supporting IaC customers
+Akamai personnel are traditionally granted access to customer accounts as their responsibilities dictate. Nothing is changing there.  However, when code starts being managed in IaC things get messier.  Akamai does not provide VCS systems.  The VCS where IaC is stored is owned by the customer.  Customers may in some cases provide accounts for Akamai support teams.  But this may not be universally true.  Some work arounds might be:
+- Identifying a property that the customer requires support with and using Terraform/Akamai-CLI to export it as terraform which can then be tested again a new property following these instructions: [Importing Existing Property](docs/importing-existing-property.md)
+- a dump of the customers code can be provided over a secure transfer.  Akamai personnel can then use that to do a test deployment against a new property.
 
+# Glossary
+- IaC: Infrastructure as code.  A pattern for managing infrastructure in a repeatable way that can be tracked, managed and deployed with ease
+- Terraform: A leading tool for managing cloud resources using IaC patterns.
+- Tofu/OpenTofu: A fork of Terraform made due to licensing changes in terraform.
+- DevContainer: A standard for augmenting standard containers with developer centric tooling.  This standard is supported by VSCode and GitHub codespaces.  You can read more [ about the standard here](https://containers.dev/), [about devcontainers with vscode here](https://code.visualstudio.com/docs/devcontainers/containers), [about devcontainer support in github codespaces here](https://docs.github.com/en/codespaces/setting-up-your-project-for-codespaces/adding-a-dev-container-configuration/introduction-to-dev-containers) 
+- VCS: Version control system. These days various flavors of Git are univerally used: GitLab, GitHub, Bitbucket, etc.
 
-Note for local development each of these Terraform Keys can be stored in a `/terraform/local-dev.tfvars file.  That TF vars file may be used when invoking TF commands like so:  `tofu plan -var-file=local-dev.tfvars -out tf.plan`. 
-
-The State Bucket Keys are a little different.  You can set them as the ENV variables:  
-`AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`.  Even though they say AWS this will work for linode.  I know it's confusing! 
-
-When you first invoke terraform init you will be prompted for the bucket. 
-
-## To get github actions to write to the registry you need to 
-- go to repository settings
-- Select actions -> general
-- Workflow permissions select "Read and Write Permissions"
-- Don't forget to click save!
-
-# Notes 
-## Action Behaviors
-- Branches with the prefix `integration-*` will be treated as integration environments.  THey will get builds.  All other branches will not have any special treatment, they will just be normal development branches that do not receive automated builds unless they are PR'd.
-
-## aarch64 vs amd64
-In olden times everyone ran on x86_64 machines and everything worked fine.  Then the world changed. You laptop may be running ARM. Your cloud jobs may be working on x86_64.  The development.Dockerfile has been designed to work on both.  However, remember that you will need to rebuild the image for each architecture.  
-
-## To test container changes locally
-run `podman image build -f development.Dockerfile --no-cache`
-
-## Parser for Edge Worker bundles is finicky
-If you are building a tgz for edge workers know that the parser will error if the archive has any enclosing directory info wrapping the bundle.json and main.js.  You MUST run the command from inside the directory.
-The following will work:
-- `tar -czvf ../terraform/edge-worker-bundle.tgz *`
-- `tar -czvf ../terraform/edge-worker-bundle.tgz bundle.json main.js`
-
-However the following will NOT work:
-- `tar -czvf filename2.tgz edge-worker/bundle.json edge-worker/main.js`
-- `tar -czvf foo.tar.gz -C edge-worker .`
-
-TLDR if you run `tar -tzvf foo.tar.gz` and see any leading `./` or other leading directories the edgeworker validator will fail.  
-
-## Connecting Cyberduck to Linode Bucket
-Sometimes its useful to connect to your bucket to check on your TF state or in extremely rare occurences to manually delete it. These instructions are for Cyberduck but can be genralized for other S3 capable clients.
-1. Install Cyberducks
-1. Go to `Settings` -> `Connection Profiles`
-1. Search for linode
-1. Select the correct region for your bucket.
-1. Save
-1. Reopen the connection window and select it.  Will be towards the bottom of the drop down.
-
-# Outstanding issues
-## Git Credentials
-Get the git credentials to forward from host
-https://code.visualstudio.com/remote/advancedcontainers/sharing-git-credentials
-
-## Add approval workflow for production deployments
-## Setup production deployment using the actual production network.
-## Test PRs
-## Figure out if we can avoid needing a deployment. 
+# Terms
+This project is unofficial and unsupported by Akamai Inc.  It represents an individual effort to make working with Akamai easier. 

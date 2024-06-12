@@ -1,26 +1,39 @@
-name: Workflow using custom Docker image
+name: Workflow for developing against Akamai
 
 on:
   push:
     branches:
+      # We know that many teams work from a single repository vs a forking workflow.  
+      # We want to help those teams avoid redundant builds for the push to the branch AND a pull-request.
+      # These rules help provide sane baselines.  Pull requests , main (standard default branch), and any branch prefixed with integration will build. 
+      # Need a stable environment for an integration envrionment?  Prefix with integration!
       - main
       - 'integration*'
     paths-ignore:
       - "development.Dockerfile"
+    # Apologies to the docs folks.  This base setup doesn't have any liting/docs standards so we aren't triggering builds here.  
+    # That being said you could probably come up with something and remove this ignore!   
+    paths-ignore:
+      - '**/*.md'
   pull_request:
+    paths-ignore:
+      - '**/*.md'
+      - "development.Dockerfile"
+
   # Types defaults to [opened, synchronize reopened]. 
-  # Closed has to be added explicitly. 
+  # Closed has to be added explicitly so that merged branches clean up their resources! 
   # https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request
     types:
       - opened
       - synchronize
       - reopened
       - closed
-    paths-ignore:
-      - "development.Dockerfile"
+  # We want to make sure that resources are reclaimed when a branch is deleted.
   delete:
 
 jobs:
+
+  # This job is the place to add your coding standard checks. By default we are just running tflint for our terraform code.  You can be more creative!
   lint:
     if: github.event_name == 'push' || (github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'synchronize'))
     runs-on: ubuntu-latest
@@ -35,6 +48,8 @@ jobs:
         run: tflint
         working-directory: terraform
 
+  # The deployment_name_builder will allow you to override the branch or PR name for use in environment deployment. 
+  # This job is silly and only exists to work around a quirk of GitHub Actions.
   # The deployment/environment URL is evaluated at the start of a job. 
   # The only way to control it is to set the value in an earlier job and pass that along.
   # See here: https://docs.github.com/en/actions/using-jobs/defining-outputs-for-jobs
@@ -47,6 +62,7 @@ jobs:
       deployment_name: ${{ steps.set_env_step.outputs.deployment_name }}
       deployment_url: ${{ steps.set_env_step.outputs.deployment_url }}
 
+    # We are simply overriding the branch name of main and mapping it to the deployment name of production. 
     steps:
       - name: Set environment name
         id: set_env_step
@@ -73,12 +89,21 @@ jobs:
               echo "Final value of ref_name: $ref_name"
               env
 
+  # This deloyment example leverages OpenTofu.  However, the build container also has Terraform installed.  
+  # There are some recent controversies on changes in licensing terms with Terraform driving some to OpenTofu.  
+  # We aren't lawyers. Use what you want! 
+  # See: https://opentofu.org/
+  #      https://www.thestack.technology/oracle-dumps-terraform-for-opentofu/
   deployment:
     if: github.event_name == 'push' || (github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'synchronize'))
     runs-on: ubuntu-latest
     needs:  deployment_name_builder
     container:
       image: ghcr.io/akamai-consulting/akamai-starterkit:dev-build
+    # All these environment variables need to defined in your GitHub Actions enabled repository 
+    # See here for how to set env variables: https://docs.github.com/en/actions/learn-github-actions/variables#defining-configuration-variables-for-multiple-workflows
+    # See here for how to set secrets: https://docs.github.com/en/actions/security-guides/using-secrets-in-github-actions
+
     env:
       TF_VAR_group_id: ${{ secrets.GROUP_ID }}
       TF_VAR_property_id: ${{ secrets.PROPERTY_ID }}
@@ -95,9 +120,19 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # NOTE you must define EDGERC in your secrets.
+      # See here for setting up API credentials: https://techdocs.akamai.com/developer/docs/set-up-authentication-credentials
       - name: Write secret to file
         run: echo "${{ secrets.EDGERC }}" > ~/.edgerc
 
+      # This approach leverages terraform workspaces to manage state independently for each environment.
+      # In our case we simply map branchname or PullRequst number to environment or deployment. 
+      # With Terraform workspaces each branch and each PR gets its own statefile.  They are isolated from
+      # one another!
+      #
+      # See: https://spacelift.io/blog/terraform-workspaces
+      #      https://developer.hashicorp.com/terraform/language/state/workspaces
+      #      https://developer.hashicorp.com/terraform/cli/workspaces
       - name: 'Terraform Init'
         run: |
           if [ "${{ github.ref_name }}" = "${{ github.event.repository.default_branch }}" ]; then
@@ -120,7 +155,7 @@ jobs:
           fi
         working-directory: terraform  
 
-      # This is an annoying work around.  Repetitive calls to TF will expect that the bundle/tar exist. Without this tofu apply will fail.       
+      # This is an annoying work around.  Repetitive calls to TF will expect that the bundle/tar exist. Without this `tofu apply` will fail on repetitive builds.       
       - name: Prepare edge worker bundle
         run: tar -czvf ../terraform/edge-worker-bundle.tgz *
         working-directory: edge-worker
@@ -158,6 +193,7 @@ jobs:
               sleep 60
             fi
           done
+  # This job is designed to run when a branch is deleted, or a PR is closed or merged.  It will run tofu destroy to tear-down any resources created earlier. 
   cleanup:
     if: github.event_name == 'delete' || github.event.action == 'closed'
     runs-on: ubuntu-latest
