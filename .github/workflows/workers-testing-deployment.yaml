@@ -9,20 +9,19 @@ on:
       # Need a stable environment for an integration envrionment?  Prefix with integration!
       - main
       - 'integration*'
-    paths-ignore:
-      - "development.Dockerfile"
-    # Apologies to the docs folks.  This base setup doesn't have any liting/docs standards so we aren't triggering builds here.  
-    # That being said you could probably come up with something and remove this ignore!   
-    paths-ignore:
-      - '**/*.md'
-  pull_request:
+      # Apologies to the docs folks.  This base setup doesn't have any liting/docs standards so we aren't triggering builds here.  
+      # That being said you could probably come up with something and remove this ignore!   
     paths-ignore:
       - '**/*.md'
       - "development.Dockerfile"
 
-  # Types defaults to [opened, synchronize reopened]. 
-  # Closed has to be added explicitly so that merged branches clean up their resources! 
-  # https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request
+  pull_request:
+    paths-ignore:
+      - '**/*.md'
+      - "development.Dockerfile"
+    # Types defaults to [opened, synchronize reopened]. 
+    # Closed has to be added explicitly so that merged branches clean up their resources! 
+    # https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request
     types:
       - opened
       - synchronize
@@ -32,7 +31,6 @@ on:
   delete:
 
 jobs:
-
   # This job is the place to add your coding standard checks. By default we are just running tflint for our terraform code.  You can be more creative!
   lint:
     if: github.event_name == 'push' || (github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'synchronize'))
@@ -246,6 +244,20 @@ jobs:
       - name: Terraform Destroy
         run: tofu destroy -auto-approve
         working-directory: terraform
+
+
+      # It's hard to believe that there is no better way to inactivate a deployment once it is no longer needed.
+      - name: Delete deployment
+        run: |
+          DEPLOYMENT_ID=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+          https://api.github.com/repos/${{ github.repository }}/deployments | \
+          jq -r '.[] | select(.environment == "${{ steps.set_env_step.outputs.deployment_env_name }}") | .id')
+
+          echo "::set-output name=deployment_id::$DEPLOYMENT_ID"
+
+          curl -X DELETE -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+          https://api.github.com/repos/${{ github.repository }}/deployments/$DEPLOYMENT_ID
+
     environment: 
       name: ${{needs.deployment_name_builder.outputs.deployment_name}}
       url: https://${{needs.deployment_name_builder.outputs.deployment_url}}
