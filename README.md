@@ -41,9 +41,12 @@ Akamai personnel are traditionally granted access to customer accounts as their 
 - Identifying a property that the customer requires support with and using Terraform/Akamai-CLI to export it as terraform which can then be tested again a new property following these instructions: [Importing Existing Property](docs/importing-existing-property.md)
 - a dump of the customers code can be provided over a secure transfer.  Akamai personnel can then use that to do a test deployment against a new property.
 
-# Terms
+# Glossary
 - IaC: Infrastructure as code.  A pattern for managing infrastructure in a repeatable way that can be tracked, managed and deployed with ease
 - Terraform: A leading tool for managing cloud resources using IaC patterns.
 - Tofu/OpenTofu: A fork of Terraform made due to licensing changes in terraform.
 - DevContainer: A standard for augmenting standard containers with developer centric tooling.  This standard is supported by VSCode and GitHub codespaces.  You can read more [ about the standard here](https://containers.dev/), [about devcontainers with vscode here](https://code.visualstudio.com/docs/devcontainers/containers), [about devcontainer support in github codespaces here](https://docs.github.com/en/codespaces/setting-up-your-project-for-codespaces/adding-a-dev-container-configuration/introduction-to-dev-containers) 
 - VCS: Version control system. These days various flavors of Git are univerally used: GitLab, GitHub, Bitbucket, etc.
+
+# Terms
+This project is unofficial and unsupported by Akamai Inc.  It represents an individual effort to make working with Akamai easier. 
