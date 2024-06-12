@@ -20,8 +20,17 @@ The State Bucket Keys are a little different.  You can set them as the ENV varia
 
 When you first invoke terraform init you will be prompted for the bucket. 
 
-## To get github actions to write to the registry you need to 
-- go to repository settings
-- Select actions -> general
-- Workflow permissions select "Read and Write Permissions"
-- Don't forget to click save!
+## Setting Up Token for Environment Deletion
+I really don't love this approach and I feel it has too much control but this is the only way I have found to delete environments from a CI/CD pipeline.  If anyone knows of any other ways please let me know!
+
+1. Create a new personal access token: https://github.com/settings/personal-access-tokens/new
+1. Make sure that you select the org where the repo resides and not just your own account!
+1. Limit the access to the single repo that is being used for CI/CD pipeline.
+1. Grant the token the Administratin permission.
+    ![Key for environment deletion](key-for-env-deletion.jpg )
+    ![Key Permissions](key-for-env-deletion-perms.jpg )
+
+1. Click the green "Genrate Access Token" button at the bottom of the page
+1. Copy the token value
+1. In another window go to `https://github.com/<your repo>/settings/secrets/actions`
+1. Add a new secret called "ENV_DELETION_ACCESS_TOKEN".  The value for this secret should be the access token that you just created.
