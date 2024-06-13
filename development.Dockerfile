@@ -1,4 +1,5 @@
-FROM debian:bullseye-slim
+# Use multi-stage builds
+FROM debian:bullseye-slim as builder
 ARG TARGETARCH
 
 WORKDIR /usr/local
@@ -10,6 +11,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     unzip \
     git \
+    jq \
     && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get install -y --no-install-recommends nodejs \
     && curl -sSL https://apt.releases.hashicorp.com/gpg | gpg --dearmor | tee /usr/share/keyrings/hashicorp-archive-keyring.gpg > /dev/null \
@@ -31,10 +33,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Installing Go
-ENV GOROOT=/usr/local/go
-ENV GOPATH=$HOME/go
-ENV GOLANG_VERSION=1.22.3
-ENV PATH $GOROOT/bin:/usr/local/go/bin:$PATH
+ENV GOROOT=/usr/local/go \
+    GOPATH=$HOME/go \
+    GOLANG_VERSION=1.22.3 \
+    PATH=$GOROOT/bin:/usr/local/go/bin:$PATH
 RUN curl -sSl -L -o go.tar.gz "https://go.dev/dl/go${GOLANG_VERSION}.linux-${TARGETARCH}.tar.gz" \
     && tar -C /usr/local -xzf go.tar.gz \
     && rm go.tar.gz \
@@ -48,6 +50,20 @@ RUN git clone https://github.com/akamai/cli.git /cli \
     && akamai install edgeworkers \
     && akamai install property-manager \
     && chmod -R 777 $AKAMAI_CLI_HOME
+
+# Final stage
+FROM debian:bullseye-slim
+ARG TARGETARCH
+
+COPY --from=builder /usr/local /usr/local
+COPY --from=builder /usr/bin /usr/bin
+COPY --from=builder /usr/local/go /usr/local/go
+COPY --from=builder /usr/lib /usr/lib
+                      
+# Installing Go
+ENV GOROOT=/usr/local/go \
+    GOPATH=$HOME/go \
+    PATH=$GOROOT/bin:/usr/local/go/bin:$PATH
 
 # Add vscode user and group
 RUN groupadd --gid 1000 vscode \
