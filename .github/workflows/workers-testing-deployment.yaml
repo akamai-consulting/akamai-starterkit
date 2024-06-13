@@ -191,6 +191,25 @@ jobs:
               sleep 60
             fi
           done
+  
+  
+      - name: Update Terraform State
+        run: |
+          # Pull the current Terraform state
+          tofu state pull > tofu.tfstate
+
+          # Extract the version value from outputs -> activation -> value -> version
+          version=$(jq '.outputs.activation.value.version' tofu.tfstate)
+
+          # Update the resources and outputs sections with the new version
+          jq --arg version "$version" '
+            (.resources[] | select(.instances[].attributes.staging_version) | .instances[].attributes.staging_version) |= $version |
+            (.outputs["my-property"].value.staging_version) |= $version
+          ' tofu.tfstate > tofu.tfstate.tmp
+
+          # Push the updated state back to the remote backend
+          mv tofu.tfstate.tmp tofu.tfstate
+          tofu state push tofu.tfstate
   # This job is designed to run when a branch is deleted, or a PR is closed or merged.  It will run tofu destroy to tear-down any resources created earlier. 
   cleanup:
     if: github.event_name == 'delete' || github.event.action == 'closed'
