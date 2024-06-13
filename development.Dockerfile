@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/devcontainers/base:bullseye
+FROM debian:bullseye-slim
 ARG TARGETARCH
 
 WORKDIR /usr/local
@@ -8,6 +8,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     gnupg \
     software-properties-common \
     curl \
+    unzip \
     && rm -rf /var/lib/apt/lists/*
 
 ## Install Node.js 18
@@ -68,3 +69,6 @@ RUN git clone https://github.com/akamai/cli.git /cli && \
 
 ## Clean up APT when done
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+RUN groupadd --gid 1000 vscode \
+    && useradd --uid 1000 --gid vscode --shell /bin/bash --create-home vscode
