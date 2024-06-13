@@ -4,6 +4,12 @@ ARG TARGETARCH
 
 WORKDIR /usr/local
 
+ENV GOROOT=/usr/local/go \
+GOPATH=$HOME/go \
+GOLANG_VERSION=1.22.3 \
+PATH=/usr/local/go/bin:/usr/local/go/bin:$PATH \
+AKAMAI_CLI_HOME=/cli
+
 # Install dependencies, Node.js, Terraform, OpenTofu, Hadolint, TFLint, Go, Akamai CLI
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gnupg \
@@ -32,24 +38,20 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm tflint.zip \
     && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# Installing Go
-ENV GOROOT=/usr/local/go \
-    GOPATH=$HOME/go \
-    GOLANG_VERSION=1.22.3 \
-    PATH=$GOROOT/bin:/usr/local/go/bin:$PATH
+# Install GO
 RUN curl -sSl -L -o go.tar.gz "https://go.dev/dl/go${GOLANG_VERSION}.linux-${TARGETARCH}.tar.gz" \
     && tar -C /usr/local -xzf go.tar.gz \
     && rm go.tar.gz \
     && mkdir $GOPATH
 
 # Install Akamai CLI
-ENV AKAMAI_CLI_HOME=/cli
-RUN git clone https://github.com/akamai/cli.git /cli \
+RUN git clone --depth 1 https://github.com/akamai/cli.git /cli \
     && go -C /cli build -o /usr/bin/akamai cli/main.go \
     && mkdir -m 777 $AKAMAI_CLI_HOME/.akamai-cli \
     && akamai install edgeworkers \
     && akamai install property-manager \
-    && chmod -R 777 $AKAMAI_CLI_HOME
+    && chmod -R 777 $AKAMAI_CLI_HOME \
+    && rm -rf /cli/.git
 
 # Final stage
 FROM debian:bullseye-slim
