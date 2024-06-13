@@ -63,11 +63,13 @@ COPY --from=builder /usr/bin /usr/bin
 COPY --from=builder /usr/local/go /usr/local/go
 COPY --from=builder /usr/lib /usr/lib
 COPY --from=builder /etc/ssl /etc/ssl
-                   
+COPY --from=builder /cli /cli
+                 
 # Installing Go
 ENV GOROOT=/usr/local/go \
     GOPATH=$HOME/go \
-    PATH=$GOROOT/bin:/usr/local/go/bin:$PATH
+    PATH=$GOROOT/bin:/usr/local/go/bin:$PATH \
+    AKAMAI_CLI_HOME=/cli
 
 # Add vscode user and group
 RUN groupadd --gid 1000 vscode \
