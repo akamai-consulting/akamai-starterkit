@@ -248,7 +248,7 @@ jobs:
       # It's hard to believe that there is no better way to inactivate a deployment once it is no longer needed.
       - name: Delete environment
         run: |
-          curl -X DELETE \
+          curl -f -X DELETE \
             -H "Authorization: Bearer ${{ secrets.ENV_DELETION_ACCESS_TOKEN }}" \
             -H "Accept: application/vnd.github+json" \
             -H "X-GitHub-Api-Version: 2022-11-28" \
