@@ -39,6 +39,7 @@ variable "config_section" {
   default = "default"
 }
 
+
 locals {
   hostnames = [format("%s.%s", var.deployment_name, var.base_url)]
 }
