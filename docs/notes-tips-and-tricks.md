@@ -15,3 +15,12 @@ If it works here then move onto devcontainer.
 ## Connecting Cyberduck to Linode Bucket
 Sometimes its useful to connect to your bucket to check on your TF state or in extremely rare occurences to manually delete it. These instructions are for Cyberduck but can be genralized for other S3 capable clients:
 https://www.linode.com/docs/products/storage/object-storage/guides/cyberduck/
+
+## Troubleshooting Remote State issues in Builds
+If you are seeing issues with TF-state in your build sometime its easier to debug locally.  
+1. You can override `workspace_key_prefix` in `terraform/providers.tf`.  
+1. Set it to `terraform/ci/workspace`. 
+1. From the CLI make sure that you are in the terraform directory
+1. Run `tofu init`
+1. run `tofu workspace set <your workspace>`
+1. now you can run commands like `tofu output -raw akamai_property_id` to help debug the issue

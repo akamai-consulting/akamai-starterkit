@@ -38,3 +38,8 @@ output "akamai_property_id" {
   value = akamai_property.my-property.id
   description = "The ID of the Akamai property"
 }
+
+output "akamai_dns_record_id" {
+  value = akamai_dns_record.my_dns_validation.id
+  description = "The ID of the Akamai property"
+}
