@@ -26,11 +26,15 @@ resource "akamai_property_activation" "my-property-activation" {
   auto_acknowledge_rule_warnings = true
 }
 
-
 output "my-property" {
   value = akamai_property.my-property
 }
 
 output "activation" {
   value = akamai_property_activation.my-property-activation
+}
+
+output "akamai_property_id" {
+  value = akamai_property.my-property.id
+  description = "The ID of the Akamai property"
 }
