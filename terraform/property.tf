@@ -13,8 +13,17 @@ resource "akamai_property" "my-property" {
       cert_provisioning_type = "DEFAULT"
     }
   }
+  
   rule_format = data.akamai_property_rules_builder.my-property_rule_default.rule_format
   rules       = data.akamai_property_rules_builder.my-property_rule_default.json
+
+  lifecycle {
+    ignore_changes = [ 
+      staging_version,
+      production_version,
+      version_notes
+     ]
+  }
 }
 
 # NOTE: Be careful when removing this resource as you can disable traffic
