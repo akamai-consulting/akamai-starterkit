@@ -191,6 +191,80 @@ jobs:
               sleep 60
             fi
           done
+      # This is a HACKY workaround.  It's the best bad solution we have come up with.
+      # https://github.com/akamai/terraform-provider-akamai/issues/560    
+      - name: Get Akamai Property ID
+        run: |
+          PROPERTY_ID=$(tofu output -raw akamai_property_id)
+          echo "Property ID: $PROPERTY_ID"
+          if [ -z "$PROPERTY_ID" ]; then
+            echo "Property ID is empty"
+            exit 1
+          fi
+        working-directory: terraform
+
+      - name: Resync TF State for Property and Related Resources
+        run: |
+          # Backup the current Terraform state
+          tofu state pull > backup.tfstate
+
+          # Get the resource IDs from the Terraform output
+          PROPERTY_ID=$(tofu output -raw akamai_property_id)
+          # Use jq to parse the JSON output for DNS record IDs
+          DNS_RECORD_IDS=$(tofu output -json akamai_dns_record_ids | jq -r '.[]')
+          # Use jq to parse the JSON output for hostnames
+          # HOSTNAMES_IDS=$(tofu output -json akamai_hostname_ids | jq -r '.[]')
+
+          # Remove the existing resources from the state
+          tofu state rm akamai_property.my-property
+          tofu state rm "akamai_dns_record.my_dns_validation[\"$DNS_RECORD_ID\"]"
+
+          # Assuming HOSTNAMES_ID is used in a similar way to DNS_RECORD_ID
+          # Note: Adjust the removal command based on how hostnames are managed in your Terraform configuration
+          # echo "$HOSTNAMES_IDS" | while IFS= read -r HOSTNAME_ID; do
+          #   if [ ! -z "$HOSTNAME_ID" ]; then
+          #     # Adjust this command based on your actual resource type and identifier
+          #     tofu state rm "akamai_hostname.my_hostname_resource[\"$HOSTNAME_ID\"]"
+          #   fi
+          # done
+
+          # Attempt to use the property ID in the terraform import commands
+          IMPORT_FAILED=0
+          if ! tofu import akamai_property.my-property "$PROPERTY_ID"; then
+            echo "Import of akamai_property.my-property failed"
+            IMPORT_FAILED=1
+          fi
+
+          # Import DNS records by iterating over them
+          echo "$DNS_RECORD_IDS" | while IFS= read -r DNS_RECORD_ID; do
+            if [ ! -z "$DNS_RECORD_ID" ]; then
+              if ! tofu import "akamai_dns_record.my_dns_validation[\"$DNS_RECORD_ID\"]" "$DNS_RECORD_ID"; then
+                echo "Import of akamai_dns_record.my_dns_validation with ID $DNS_RECORD_ID failed"
+                IMPORT_FAILED=1
+              fi
+            fi
+          done
+
+          # Assuming HOSTNAMES_IDS are handled similarly to DNS_RECORD_IDS
+          # Note: Adjust the import command based on how hostnames are managed in your Terraform configuration
+          # echo "$HOSTNAMES_IDS" | while IFS= read -r HOSTNAME_ID; do
+          #   if [ ! -z "$HOSTNAME_ID" ]; then
+          #     # Adjust this command based on your actual resource type and identifier
+          #     if ! tofu import "akamai_hostname.my_hostname_resource[\"$HOSTNAME_ID\"]" "$HOSTNAME_ID"; then
+          #       echo "Import of akamai_hostname.my_hostname_resource with ID $HOSTNAME_ID failed"
+          #       IMPORT_FAILED=1
+          #     fi
+          #   fi
+          # done
+
+          if [ $IMPORT_FAILED -eq 1 ]; then
+            echo "One or more imports failed, restoring the original state..."
+            tofu state push backup.tfstate
+          else
+            echo "All imports succeeded."
+          fi
+        working-directory: terraform
+  
   # This job is designed to run when a branch is deleted, or a PR is closed or merged.  It will run tofu destroy to tear-down any resources created earlier. 
   cleanup:
     if: github.event_name == 'delete' || github.event.action == 'closed'
