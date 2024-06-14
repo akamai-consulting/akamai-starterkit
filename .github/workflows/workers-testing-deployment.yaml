@@ -203,24 +203,37 @@ jobs:
           fi
         working-directory: terraform
 
-      - name: Resync TF State for Property
+      - name: Resync TF State for Property and Related Resources
         run: |
           # Backup the current Terraform state
           tofu state pull > backup.tfstate
 
-          # Get the Akamai property ID from the Terraform output
+          # Get the resource IDs from the Terraform output
           PROPERTY_ID=$(tofu output -raw akamai_property_id)
+          DNS_RECORD_ID=<$(tofu output -raw akamai_dns_record_id)
 
-          # Remove the existing resource from the state
+          # Remove the existing resources from the state
           tofu state rm akamai_property.my-property
+          tofu state rm akamai_dns_record.my_dns_validation
 
-          # Attempt to use the property ID in the terraform import command
+          # Attempt to use the property ID in the terraform import commands
           # Ensure that the address and ID are correctly specified as per the 'tofu import' command's expectation
+          IMPORT_FAILED=0
           if ! tofu import akamai_property.my-property $PROPERTY_ID; then
-            echo "Import failed, restoring the original state..."
+            echo "Import of akamai_property.my-property failed"
+            IMPORT_FAILED=1
+          fi
+
+          if ! tofu import akamai_dns_record.my_dns_validation $DNS_RECORD_ID; then
+            echo "Import of akamai_dns_record.my_dns_validation failed"
+            IMPORT_FAILED=1
+          fi
+
+          if [ $IMPORT_FAILED -eq 1 ]; then
+            echo "One or more imports failed, restoring the original state..."
             tofu state push backup.tfstate
           else
-            echo "Import succeeded."
+            echo "All imports succeeded."
           fi
         working-directory: terraform
   
