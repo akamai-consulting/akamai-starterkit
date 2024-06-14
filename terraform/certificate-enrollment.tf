@@ -38,3 +38,13 @@ resource "akamai_dns_record" "my_dns_validation" {
   target     = [local.flattened_hostnames[count.index].target]
   name       = local.flattened_hostnames[count.index].hostname
 }
+
+output "akamai_dns_record_ids" {
+  value = { for idx, dns_record in akamai_dns_record.my_dns_validation : idx => dns_record.id }
+  description = "The IDs of DNS records"
+}
+
+output "akamai_property_hostname_ids" {
+  value = data.akamai_property_hostnames.my_hostnames.hostnames
+  description = "The list of hostnames for the Akamai property"
+}
