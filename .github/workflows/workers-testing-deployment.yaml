@@ -66,7 +66,7 @@ jobs:
         id: set_env_step
         run: | 
               if [ "${{ github.event_name }}" = "pull_request" ]; then
-                ref_name="PR${{ github.event.pull_request.number }}"
+                ref_name="pr${{ github.event.pull_request.number }}"
               else
                 ref_name="${{ github.ref_name }}"
                 ref_name=$(echo "$ref_name" | sed 's/integration-//')
