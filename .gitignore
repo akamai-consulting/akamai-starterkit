@@ -54,3 +54,5 @@ terraform.rc
 # Compiled edgeworker bundle should not be committed 
 terraform/edge-worker-bundle.tgz
 
+# Ignore node_modules.  They should be pulled in by npm install.
+**/node_modules/*
