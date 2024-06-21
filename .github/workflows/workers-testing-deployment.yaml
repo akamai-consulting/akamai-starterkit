@@ -107,9 +107,11 @@ jobs:
       TF_VAR_property_id: ${{ secrets.PROPERTY_ID }}
       TF_VAR_contract_id: ${{ secrets.CONTRACT_ID }}
       TF_VAR_deployment_name: ${{needs.deployment_name_builder.outputs.deployment_name}}
+      DEPLOYMENT_URL: ${{ needs.deployment_name_builder.outputs.deployment_url }}
       AWS_ACCESS_KEY_ID: ${{ secrets.LINODE_ACCESS_KEY }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.LINODE_SECRET_KEY }}
       AKAMAI_ACCOUNT_KEY: ${{ secrets.AKAMAI_ACCOUNT_KEY }}
+
     environment: 
       name: ${{needs.deployment_name_builder.outputs.deployment_name}}
       url: https://${{needs.deployment_name_builder.outputs.deployment_url}}
@@ -191,6 +193,13 @@ jobs:
               sleep 60
             fi
           done
+      - run: npm ci
+        working-directory: js
+
+      - name: Test
+        run: npm test
+        working-directory: js
+
   # This job is designed to run when a branch is deleted, or a PR is closed or merged.  It will run tofu destroy to tear-down any resources created earlier. 
   cleanup:
     if: github.event_name == 'delete' || github.event.action == 'closed'
