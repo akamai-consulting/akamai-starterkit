@@ -21,7 +21,7 @@ describe('Deployment URL Test', () => {
     await browser.close();
   });
 
-  it('should contain the text "Hello"', async () => {
+  it('should contain the text "WompWomp"', async () => {
     const deploymentUrl = process.env.DEPLOYMENT_URL;
     expect(deploymentUrl).toBeTruthy(); // Ensure the DEPLOYMENT_URL is set
 
