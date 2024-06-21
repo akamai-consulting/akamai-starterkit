@@ -4,7 +4,7 @@ This is a demo and template for development teams working with Akamai.  This tem
 
 1. Templates to track Akamai configuration and infrastructure as code(IaC) via Terraform.  Yeah no more clicking buttons in a UI.  Every change can be tracked managed and seamlessly moved from environments. 
 
-1. GitHub Actions for supporting a Github pull request based workflow.  The union of Terraform and GitHub actions unlocks complete on-demand Akamai environments.  Developers can test their code in a real environment before submitting it for a code review and merging to a shared environment. Want integration environments to support your preferred workflow?  No problem.  Prefix branch names corresponding to your environments with "integration-*"  
+1. GitHub Actions for supporting a Github pull request based workflow.  The union of Terraform and GitHub actions unlocks complete on-demand Akamai environments.  Developers can test their code in a real environment before submitting it for a code review and merging to a shared environment. Want integration environments to support your preferred workflow?  No problem.  Prefix branch names corresponding to your environments with "integration-*". Like automated testing?  OOTB builds can leverage `Chromium`, `Puppeteer` and `Jest` to test deployments!  
 
 # Why should I care?
 - Out of the box Akamai supports staging and production environments.  This template gives you the tools to create any code promotion process you want.  Do you want `dev` -> `uat` -> `staging` -> `prod`?  No problem.  
@@ -20,6 +20,7 @@ This is a demo and template for development teams working with Akamai.  This tem
 - [Akamai Prequisites](docs/akamai-prerequisites.md)
 - [Safely Running Terraform Locally](docs/safely-running-terraform-locally.md)
 - [Importing Existing Property](docs/importing-existing-property.md)
+- [Automated Testing](docs/automated-testing.md) 
 
 # Additional Resources
 - [Terraform Basics](docs/terraform-basics.md): Just a superficial quick start.
