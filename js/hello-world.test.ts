@@ -1,8 +1,8 @@
 import * as puppeteer from 'puppeteer';
 
 describe('Deployment URL Test', () => {
-  let browser: puppeteer.Browser; // Explicitly type the browser variable
-  let page: puppeteer.Page; // Also, explicitly type the page variable
+  let browser: puppeteer.Browser; // Explicitly type the browser variable.
+  let page: puppeteer.Page; // Also, explicitly type the page variable.
 
   beforeAll(async () => {
     browser = await puppeteer.launch({
