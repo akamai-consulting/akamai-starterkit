@@ -108,6 +108,7 @@ jobs:
       TF_VAR_contract_id: ${{ secrets.CONTRACT_ID }}
       TF_VAR_deployment_name: ${{needs.deployment_name_builder.outputs.deployment_name}}
       DEPLOYMENT_URL: ${{ needs.deployment_name_builder.outputs.deployment_url }}
+      DEPLOYMENT_NAME: ${{ needs.deployment_name_builder.outputs.deployment_name }}
       AWS_ACCESS_KEY_ID: ${{ secrets.LINODE_ACCESS_KEY }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.LINODE_SECRET_KEY }}
       AKAMAI_ACCOUNT_KEY: ${{ secrets.AKAMAI_ACCOUNT_KEY }}
@@ -120,6 +121,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Get Short GitHub SHA and Save in Environment Variable
+        run: 	|
+          git config --global --add safe.directory /__w/akamai-starterkit/akamai-starterkit 
+          echo "COMMIT_HASH=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+        
       # NOTE you must define EDGERC in your secrets.
       # See here for setting up API credentials: https://techdocs.akamai.com/developer/docs/set-up-authentication-credentials
       - name: Write secret to file
@@ -154,6 +160,12 @@ jobs:
             tofu workspace new "$TF_VAR_deployment_name"
           fi
         working-directory: terraform  
+
+      - run: npm ci
+        working-directory: js
+
+      - run: npm run build
+        working-directory: js
 
       # This is an annoying work around.  Repetitive calls to TF will expect that the bundle/tar exist. Without this `tofu apply` will fail on repetitive builds.       
       - name: Prepare edge worker bundle
@@ -193,8 +205,6 @@ jobs:
               sleep 60
             fi
           done
-      - run: npm ci
-        working-directory: js
 
       - name: Test
         run: npm test
