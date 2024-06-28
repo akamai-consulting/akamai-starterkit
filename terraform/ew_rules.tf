@@ -9,7 +9,7 @@ data "akamai_property_rules_builder" "ew-routing-rule" {
         match_case_sensitive = false
         match_operator       = "MATCHES_ONE_OF"
         normalize            = false
-        values               = [format("/%s", var.deployment_name)]
+        values               = ["/hello-world", ]
       }
     }
     behavior {
@@ -24,4 +24,3 @@ data "akamai_property_rules_builder" "ew-routing-rule" {
     }
   }
 }
-

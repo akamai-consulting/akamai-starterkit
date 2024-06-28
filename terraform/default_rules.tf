@@ -27,7 +27,7 @@ data "akamai_property_rules_builder" "my-property_rule_default" {
       data.akamai_property_rules_builder.my-property_rule_augment_insights.json,
       data.akamai_property_rules_builder.my-property_rule_accelerate_delivery.json,
       data.akamai_property_rules_builder.my-property_rule_offload_origin.json,
-      data.akamai_property_rules_builder.my-property_rule_ew_test_example.json,
+      data.akamai_property_rules_builder.ew-routing-rule.json,
       data.akamai_property_rules_builder.my-property_rule_strengthen_security.json,
       data.akamai_property_rules_builder.my-property_rule_increase_availability.json,
       data.akamai_property_rules_builder.my-property_rule_minimize_payload.json,
@@ -126,31 +126,6 @@ data "akamai_property_rules_builder" "my-property_rule_offload_origin" {
       data.akamai_property_rules_builder.my-property_rule_graph_ql.json,
       data.akamai_property_rules_builder.my-property_rule_uncacheable_objects.json,
     ]
-  }
-}
-
-data "akamai_property_rules_builder" "my-property_rule_ew_test_example" {
-  rules_v2024_02_12 {
-    name                  = "EW_TEST_EXAMPLE"
-    criteria_must_satisfy = "all"
-    criterion {
-      path {
-        match_case_sensitive = false
-        match_operator       = "MATCHES_ONE_OF"
-        normalize            = false
-        values               = ["/hello-world", ]
-      }
-    }
-    behavior {
-      edge_worker {
-        create_edge_worker  = ""
-        edge_worker_id      = "85795"
-        enabled             = true
-        m_pulse             = false
-        m_pulse_information = ""
-        resource_tier       = ""
-      }
-    }
   }
 }
 
