@@ -13,11 +13,13 @@ on:
       # That being said you could probably come up with something and remove this ignore!   
     paths-ignore:
       - '**/*.md'
+      - 'docs/*'
       - "development.Dockerfile"
 
   pull_request:
     paths-ignore:
       - '**/*.md'
+      - 'docs/*'
       - "development.Dockerfile"
     # Types defaults to [opened, synchronize reopened]. 
     # Closed has to be added explicitly so that merged branches clean up their resources! 
