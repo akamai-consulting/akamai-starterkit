@@ -21,24 +21,17 @@ describe('Deployment URL Test', () => {
     await browser.close();
   });
 
-  it('should contain the text "Hello"', async () => {
+  it('should contain the correct <h1> and <h2> content', async () => {
+    const deploymentName = process.env.DEPLOYMENT_NAME;
     const deploymentUrl = process.env.DEPLOYMENT_URL;
-    expect(deploymentUrl).toBeTruthy(); // Ensure the DEPLOYMENT_URL is set
+    const testUrl = `https://${deploymentUrl}/hello-world`;
 
-    if (deploymentUrl) {
-      // Updated to visit /hello-world path
-      const testUrl = `https://${deploymentUrl}/hello-world`;
-
-      
-      console.log(`Navigating to URL: ${testUrl}`);
-      await page.goto(testUrl, { waitUntil: 'domcontentloaded' });
+    await page.goto(testUrl);
+    const h1Content = await page.$eval('h1', element => element.innerHTML);
+    const h2Content = await page.$eval('h2', element => element.innerHTML);
   
-    } else {
-      throw new Error('Deployment URL is undefined');
-    }
-    const bodyText = await page.evaluate(() => document.body.innerText);
-    expect(bodyText).toContain('Hello World From Akamai EdgeWorkers');
- 
-
+    expect(h1Content).toBe(`Hello World From Akamai EdgeWorkers:`);
+    expect(h2Content).toBe(`Deployment: ${deploymentName}`);
   });
+
 });

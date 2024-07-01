@@ -7,7 +7,10 @@
     "doc": "docs"
   },
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "inject-hello-world": "node build-scripts/hello-world-injector.js",
+    "ew-bundle-versioner": "node build-scripts/ew-bundle-versioner.js",
+    "build": "npm run inject-hello-world && npm run ew-bundle-versioner"
   },
   "keywords": [],
   "author": "",
