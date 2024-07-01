@@ -8,24 +8,40 @@ Note: these instructions are experimental and untested.  If you follow them and 
 1. Install VSCode: [https://code.visualstudio.com/download](https://code.visualstudio.com/download)
 1. Open the VSCode project folder in a terminal window using the command `code .`
 1. It will prompt you to install some extensions, just click on "Install" for all of them.
-1. It will prompt you to reopen the project in a devcontainer.  Do so. 
+1. It will prompt you to reopen the project in a devcontainer.  DON'T DO IT(yet). 
+1. You need to update the Docker Path setting (via Dev > Containers: Docker Path in the Settings editor) to `podman`. 
+See [here](https://code.visualstudio.com/remote/advancedcontainers/docker-options) for additional details.
+
+   ![VSCode Docker Path Settings](docker-path-setting.png  "VSCode Docker Path Settings")
+1. Click on the blue button in the lower left corner and a context menu will pop up in the top center of the screen select "Reopen In Container"
 
 # Getting Started Locally Mac
 All you need to get started for:
 1. Install Brew `https://brew.sh/`
-1. Install VSCode `brew cask install vscode`
-1. Install Podman and Podman desktop  `brew cask install podman-desktop`
+1. Install Podman  `brew install podman`
+1. Install VSCode `brew install visual-studio-code`
+1. Install Podman desktop  `brew install podman-desktop`
 1. Open the VSCode project folder in a terminal window using the command `code .`
 1. It will prompt you to install some extensions, just click on "Install" for all of them.
-1. It will prompt you to reopen the project in a devcontainer. 
+1. It will prompt you to reopen the project in a devcontainer.  DON'T DO IT(yet). 
+1. You need to update the Docker Path setting (via Dev > Containers: Docker Path in the Settings editor) to `podman`. 
+See [here](https://code.visualstudio.com/remote/advancedcontainers/docker-options) for additional details.
 
+   ![VSCode Docker Path Settings](docker-path-setting.png  "VSCode Docker Path Settings")
+1. Click on the blue button in the lower left corner and a context menu will pop up in the top center of the screen select "Reopen In Container"
 # Getting Started Linux
 Note: these instructions are experimental and untested.  If you follow them and have learnings please submit your findings as a Pull Request!
 1. Follow instructions to install: [Podman](https://podman.io/docs/installation#installing-on-linux)
 1. Follow instructions to install: [VSCode](https://code.visualstudio.com/docs/setup/linux)
 1. Open the VSCode project folder in a terminal window using the command `code .`
 1. It will prompt you to install some extensions, just click on "Install" for all of them.
-1. It will prompt you to reopen the project in a devcontainer.  Do so. 
+1. It will prompt you to reopen the project in a devcontainer.  DON'T DO IT(yet). 
+1. You need to update the Docker Path setting (via Dev > Containers: Docker Path in the Settings editor) to `podman`. 
+See [here](https://code.visualstudio.com/remote/advancedcontainers/docker-options) for additional details.
+
+   ![VSCode Docker Path Settings](docker-path-setting.png  "VSCode Docker Path Settings")
+1. Click on the blue button in the lower left corner and a context menu will pop up in the top center of the screen select "Reopen In Container"
+
 Thats it. Now VSCode is running inside a container and your local development environment should be identical across all projects that use this approach.  The Terminal inside VS code is attached to the container.  OOTB things like `terraform` `tofu` or `akamai` will just work.  Want to add something else to the mix?  Edit [development.Dockerfile] and rebuild your local devcontainer.
 
 # What do I get OOTB in my dev container: 
