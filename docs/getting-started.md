@@ -21,6 +21,9 @@ All you need to get started for:
 1. Install Podman  `brew install podman`
 1. Install VSCode `brew install visual-studio-code`
 1. Install Podman desktop  `brew install podman-desktop`
+1. Statup Podman `open /Applications/Podman\ Desktop.app/`
+1. In Podman initialize and start podman VM.
+
 1. Open the VSCode project folder in a terminal window using the command `code .`
 1. It will prompt you to install some extensions, just click on "Install" for all of them.
 1. It will prompt you to reopen the project in a devcontainer.  DON'T DO IT(yet). 
