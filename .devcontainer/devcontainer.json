@@ -13,14 +13,11 @@
 		"vscode": {
 			"extensions": [
 				"HashiCorp.terraform",
-				"ms-kubernetes-tools.vscode-kubernetes-tools",
-				"AkamaiEdgeWorker.akamai-edgeworkers-vscode-extension",
-				"Akamai.papi",
-				"4ops.terraform"
+				"ms-azuretools.vscode-docker"
 			]
 		}
 	},
 	"mounts": [
 		"type=bind,source=${localEnv:HOME}/.edgerc,target=/home/vscode/.edgerc"
-	]
+		]
   }
