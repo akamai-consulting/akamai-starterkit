@@ -4,7 +4,11 @@ If in doubt you can find the lastest instructions from Microsoft [here](https://
 
 # Getting Started Locally Windows:
 Note: these instructions are experimental and untested.  If you follow them and have learnings please submit your findings as a Pull Request!
+1. Make sure your git ssh-keys are set up.  See[here] (https://code.visualstudio.com/remote/advancedcontainers/sharing-git-credentials)
+1. Verify that your SSH Key is successfully loaded by the SSH agent `ssh-add -l` if not repeat the last step.  Its critical to make sure this is setup if you want to be able to interact with Git-remotes from inside dev-container.
 1. Install Podman Desktop [https://podman-desktop.io/downloads](https://podman-desktop.io/downloads)
+1. Statup Podman `put something windowsy here`
+1. In Podman initialize and start Podman VM.
 1. Install VSCode: [https://code.visualstudio.com/download](https://code.visualstudio.com/download)
 1. Open the VSCode project folder in a terminal window using the command `code .`
 1. It will prompt you to install some extensions, just click on "Install" for all of them.
@@ -16,14 +20,15 @@ See [here](https://code.visualstudio.com/remote/advancedcontainers/docker-option
 1. Click on the blue button in the lower left corner and a context menu will pop up in the top center of the screen select "Reopen In Container"
 
 # Getting Started Locally Mac
-All you need to get started for:
+All you need to get started:
+1. Make sure your git ssh-keys are set up.  See[here] (https://code.visualstudio.com/remote/advancedcontainers/sharing-git-credentials)
+1. Verify that your SSH Key is successfully loaded by the SSH agent `ssh-add -l` if not repeat the last step.  Its critical to make sure this is setup if you want to be able to interact with Git-remotes from inside dev-container.
 1. Install Brew `https://brew.sh/`
 1. Install Podman  `brew install podman`
 1. Install VSCode `brew install visual-studio-code`
 1. Install Podman desktop  `brew install podman-desktop`
 1. Statup Podman `open /Applications/Podman\ Desktop.app/`
 1. In Podman initialize and start podman VM.
-
 1. Open the VSCode project folder in a terminal window using the command `code .`
 1. It will prompt you to install some extensions, just click on "Install" for all of them.
 1. It will prompt you to reopen the project in a devcontainer.  DON'T DO IT(yet). 
@@ -34,6 +39,8 @@ See [here](https://code.visualstudio.com/remote/advancedcontainers/docker-option
 1. Click on the blue button in the lower left corner and a context menu will pop up in the top center of the screen select "Reopen In Container"
 # Getting Started Linux
 Note: these instructions are experimental and untested.  If you follow them and have learnings please submit your findings as a Pull Request!
+1. Make sure your git ssh-keys are set up.  See[here] (https://code.visualstudio.com/remote/advancedcontainers/sharing-git-credentials)
+1. Verify that your SSH Key is successfully loaded by the SSH agent `ssh-add -l` if not repeat the last step.  Its critical to make sure this is setup if you want to be able to interact with Git-remotes from inside dev-container.
 1. Follow instructions to install: [Podman](https://podman.io/docs/installation#installing-on-linux)
 1. Follow instructions to install: [VSCode](https://code.visualstudio.com/docs/setup/linux)
 1. Open the VSCode project folder in a terminal window using the command `code .`
