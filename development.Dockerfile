@@ -35,6 +35,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libxcomposite1 \
     libxdamage1 \
     libxrandr2 \
+    ssh \
+    vim \
     xdg-utils \   
     && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get install -y --no-install-recommends nodejs \
@@ -86,7 +88,7 @@ COPY --from=builder /cli /cli
 COPY --from=builder /etc/chromium.d /etc/chromium.d
 # Assuming shared resources for Chromium might be here
 COPY --from=builder /usr/share /usr/share  
-
+COPY --from=builder /etc/alternatives/vim /etc/alternatives/vim
 # Installing Go
 ENV GOROOT=/usr/local/go \
     GOPATH=$HOME/go \

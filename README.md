@@ -17,7 +17,7 @@ This is a demo and template for development teams working with Akamai.  This tem
 
 # Resources to get started:
 - [Getting Started Locally](docs/getting-started.md)
-- [Akamai Prequisites](docs/akamai-prerequisites.md)
+- [Akamai Prequisites](docs/akamai-prerequisites/akamai-prerequisites.md)
 - [Safely Running Terraform Locally](docs/safely-running-terraform-locally.md)
 - [Importing Existing Property](docs/importing-existing-property.md)
 - [Automated Testing](docs/automated-testing.md) 
