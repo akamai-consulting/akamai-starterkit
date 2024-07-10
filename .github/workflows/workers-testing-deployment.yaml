@@ -181,6 +181,7 @@ jobs:
       - name: Deploy Terraform Infrastructure as Code(IaC)
         run: tofu apply -auto-approve
         working-directory: terraform
+
       # Terraform will complete within about 5 min.  
       # However, edge domain and SSL certificate deployment take time beyond that 5 min.
       # This step is designed to give us an accurage indicator of when the environment is ready.
@@ -208,6 +209,10 @@ jobs:
             fi
           done
 
+      - name: Update the TF state to work around Limitations in Akamai TF Provider
+        run: terraform apply -refresh-only -auto-approve
+        working-directory: terraform
+        
       - name: Test
         run: npm test
         working-directory: js
